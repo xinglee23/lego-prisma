@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "prisma db push",
+    "build": "prisma generate && tsc",
     "prisma:generate": "prisma generate",
     "start": "ts-node src/index.ts",
     "dev": "PORT=3000 ts-node src/index.ts"
