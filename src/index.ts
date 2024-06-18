@@ -87,8 +87,8 @@ router.get('/activity/:id', async (ctx) => {
 
 app.use(router.routes()).use(router.allowedMethods());
 
-app.listen(3000, () =>
+app.listen(8000, () =>
   console.log(`
-🚀 Server ready at: http://localhost:3000
+🚀 Server ready at: http://localhost:8000
 ⭐️ See sample requests: http://pris.ly/e/ts/rest-koa#3-using-the-rest-api`)
 );
