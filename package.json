@@ -10,6 +10,7 @@
     "studio": "prisma studio"
   },
   "dependencies": {
+    "@koa/cors": "^5.0.0",
     "@koa/router": "12.0.1",
     "@prisma/client": "5.14.0",
     "@types/mongodb": "^4.0.7",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@types/koa": "2.15.0",
+    "@types/koa__cors": "^5.0.0",
     "@types/koa__router": "12.0.4",
     "@types/node": "20.14.0",
     "@types/uuid": "^9.0.8",

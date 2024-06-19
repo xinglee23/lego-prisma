@@ -1,6 +1,7 @@
 /** @format */
 
 import Koa from 'koa';
+import Cors from '@koa/cors';
 import Router from '@koa/router';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { koaBody } from 'koa-body';
@@ -10,6 +11,14 @@ const router = new Router();
 const prisma = new PrismaClient();
 
 app.use(koaBody());
+app.use(
+  Cors({
+    origin: '*',
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
+  })
+);
 
 router.post('/activity/create', async (ctx) => {
   const { user_name, user_cname, activity } = ctx.request.body;
