@@ -23,37 +23,63 @@ enum PosterSettingTypeEnum {
   TEMPLATE
 }
 
-model User {
-  id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  userName  String
-  userCname String
-  activity  Activity[]
+model TakePartInConfig {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  user_group       String? // 用户分组
+  user_group_cname String? // 用户分组中文名
+  SettingConfig    SettingConfig[]
+}
+
+model RewardsList {
+  reward_info_id String          @id @default(auto()) @map("_id") @db.ObjectId
+  reward_json    Json?
+  SettingConfig  SettingConfig[]
+}
+
+model SettingConfig {
+  id                     String           @id @default(auto()) @map("_id") @db.ObjectId
+  version                String? // 模板版本
+  activity_param_config  Json? // 前端给后端的结构化数据
+  // activity_show_name     String? // 活动对外展示名称
+  activity_start_time    String // 活动开始时间
+  activity_end_time      String // 活动结束时间
+  take_part_in_config_id String           @db.ObjectId
+  take_part_in_config    TakePartInConfig @relation(fields: [take_part_in_config_id], references: [id])
+  reward_id              String           @db.ObjectId
+  rewards_list           RewardsList      @relation(fields: [reward_id], references: [reward_info_id])
+  activity               Activity[]
 }
 
 model Activity {
-  activityId       String           @id @default(auto()) @map("_id") @db.ObjectId
-  type             ActivityTypeEnum
-  name             String
-  activityShowName String
-  source           String
-  workStatus       String
-  url              String
-  secondWorkStatus String
-  createTime       DateTime
-  updateTime       DateTime
-  validated        Boolean
-  editPreset       Boolean?
-  version          String?
-  user             User?            @relation(fields: [userId], references: [id])
-  userId           String?          @db.ObjectId
-  templateConfig   Json
-  componentList    ComponentList[]
+  activity_id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  name               String // 作品标题，默认是【场景名称】
+  activity_show_name String // 作品对外展示名称
+  type               ActivityTypeEnum
+  source             String
+  work_status        String // 作品状态：[ACTIVITY_DRAFT 草稿  ACTIVITY_UN_START 未开始 ACTIVITY_IN_PROGRESS 进行中 ACTIVITY_STOP 暂停中 ACTIVITY_END 已结束 ACTIVITY_KILL 已终止 ACTIVITY_PUBLISH_FAIL 发布失败]
+  url                String // 作品发布的URL
+  second_work_status String // 作品二级状态：[APPROVAL_REJECTED 审批驳回 APPROVAL_IN_PROGRESS 审批中 APPROVAL_AGREE 审批通过 KILL_MANUAL 手动终止 REWARDS_NOT_ENOUGH 奖励不足]
+  creator_id         String           @db.ObjectId
+  creator            Creator          @relation(fields: [creator_id], references: [user_id])
+  create_time        DateTime         @default(now())
+  update_time        DateTime
+  // tags_id            String           @db.ObjectId
+  // tags               Tags             @relation(fields: [tags_id], references: [id])
+  template_config    Json
+  setting_config_id  String           @db.ObjectId
+  setting_config     SettingConfig    @relation(fields: [setting_config_id], references: [id])
+  validated          Boolean?
 }
 
-model ComponentList {
-  componentInstanceId String    @id @default(auto()) @map("_id") @db.ObjectId
-  componentCode       String
-  componentName       String
-  Activity            Activity? @relation(fields: [componentActivityId], references: [activityId])
-  componentActivityId String?   @db.ObjectId
+// model Tags {
+//   id       String     @id @default(auto()) @map("_id") @db.ObjectId
+//   name     String?
+//   activity Activity[]
+// }
+
+model Creator {
+  user_id    String     @id @default(auto()) @map("_id") @db.ObjectId
+  user_name  String
+  user_cname String
+  activity   Activity[]
 }

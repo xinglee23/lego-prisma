@@ -11,42 +11,39 @@ const prisma = new PrismaClient();
 
 app.use(koaBody());
 
-router.post('/create/activity', async (ctx) => {
-  const { userName, userCname, activity } = ctx.request.body;
+router.post('/activity/create', async (ctx) => {
+  const { user_name, user_cname, activity } = ctx.request.body;
 
   try {
-    const newActivity = await prisma.user.create({
+    const newActivity = await prisma.creator.create({
       data: {
-        userName,
-        userCname,
+        user_name,
+        user_cname,
         activity: {
           create: {
-            type: activity.type,
+            update_time: new Date(),
             name: activity.name,
-            activityShowName: activity.activityShowName,
+            activity_show_name: activity.activity_show_name,
+            type: activity.type, // 根据 ActivityTypeEnum 的枚举值
             source: activity.source,
-            workStatus: activity.workStatus,
+            work_status: activity.work_status,
             url: activity.url,
-            secondWorkStatus: activity.secondWorkStatus,
-            validated: activity.validated,
-            templateConfig: activity.templateConfig,
-            createTime: new Date(),
-            updateTime: new Date(),
-            componentList: {
-              create: [
-                {
-                  componentCode: 'APP',
-                  componentName: 'APP',
+            second_work_status: activity.second_work_status,
+            template_config: activity.template_config, // 根据需要设置 JSON 数据
+            setting_config: {
+              create: {
+                ...activity.setting_config,
+                take_part_in_config: {
+                  create: {
+                    ...activity.setting_config.take_part_in_config,
+                  },
                 },
-                {
-                  componentCode: 'TEXT',
-                  componentName: '文字 8',
+                rewards_list: {
+                  create: {
+                    ...activity.setting_config.rewards_list,
+                  },
                 },
-                { 
-                  componentCode: 'TEXT',
-                  componentName: '文字 9',
-                },
-              ],
+              },
             },
           },
         },
@@ -62,6 +59,51 @@ router.post('/create/activity', async (ctx) => {
   }
 });
 
+router.post('/activity/update', async (ctx) => {
+  const { activity_id, activity } = ctx.request.body;
+
+  try {
+    const updatedActivity = await prisma.activity.update({
+      where: {
+        activity_id,
+      },
+      data: {
+        update_time: new Date(),
+        name: activity.name,
+        activity_show_name: activity.activity_show_name,
+        type: activity.type, // 根据 ActivityTypeEnum 的枚举值
+        source: activity.source,
+        work_status: activity.work_status,
+        url: activity.url,
+        second_work_status: activity.second_work_status,
+        template_config: activity.template_config, // 根据需要设置 JSON 数据
+        setting_config: {
+          update: {
+            ...activity.setting_config,
+            take_part_in_config: {
+              update: {
+                ...(activity.setting_config?.take_part_in_config || {}),
+              },
+            },
+            rewards_list: {
+              update: {
+                ...(activity.setting_config?.rewards_list || {}),
+              },
+            },
+          },
+        },
+      },
+    });
+
+    ctx.status = 201;
+    ctx.body = updatedActivity;
+  } catch (error) {
+    console.error('Error updating activity:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Internal Server Error' };
+  }
+})
+
 // 获取所有活动
 router.get('/activity/all', async (ctx) => {
   const activityList = await prisma.activity.findMany();
@@ -69,20 +111,31 @@ router.get('/activity/all', async (ctx) => {
 });
 
 router.get('/user/all', async (ctx) => {
-  const activityList = await prisma.user.findMany();
+  const activityList = await prisma.creator.findMany();
   ctx.body = activityList;
 });
 
-router.get('/activity/:id', async (ctx) => {
+// 获取编辑页面作品详情信息
+router.get('/activity/edit_info/:id', async (ctx) => {
   const { id } = ctx.params;
-  console.log('params', ctx.params);
-  const activityList = await prisma.activity.findUnique({
+  const activity = await prisma.activity.findUnique({
     where: {
-      activityId: id,
+      activity_id: id,
     },
   });
 
-  ctx.body = activityList;
+  const user_id = activity?.creator_id;
+
+  const creator = await prisma.creator.findUnique({
+    where: {
+      user_id,
+    },
+  });
+
+  ctx.body = {
+    ...activity,
+    creator,
+  };
 });
 
 app.use(router.routes()).use(router.allowedMethods());
