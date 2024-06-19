@@ -102,7 +102,7 @@ router.post('/activity/update', async (ctx) => {
     ctx.status = 500;
     ctx.body = { error: 'Internal Server Error' };
   }
-})
+});
 
 // 获取所有活动
 router.get('/activity/all', async (ctx) => {
@@ -118,24 +118,36 @@ router.get('/user/all', async (ctx) => {
 // 获取编辑页面作品详情信息
 router.get('/activity/edit_info/:id', async (ctx) => {
   const { id } = ctx.params;
-  const activity = await prisma.activity.findUnique({
-    where: {
-      activity_id: id,
-    },
-  });
+  try {
+    const activity = await prisma.activity.findUnique({
+      where: {
+        activity_id: id,
+      },
+    });
 
-  const user_id = activity?.creator_id;
+    const user_id = activity?.creator_id;
+    const setting_config_id = activity?.setting_config_id;
 
-  const creator = await prisma.creator.findUnique({
-    where: {
-      user_id,
-    },
-  });
+    const creator = await prisma.creator.findUnique({
+      where: {
+        user_id,
+      },
+    });
 
-  ctx.body = {
-    ...activity,
-    creator,
-  };
+    const settingConfig = await prisma.settingConfig.findUnique({
+      where: { id: setting_config_id },
+    });
+
+    ctx.body = {
+      ...activity,
+      setting_config: settingConfig,
+      creator,
+    };
+  } catch (error) {
+    console.error('Error getting activity:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Internal Server Error' };
+  }
 });
 
 app.use(router.routes()).use(router.allowedMethods());
