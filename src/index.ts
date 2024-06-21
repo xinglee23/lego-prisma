@@ -5,6 +5,11 @@ import Cors from '@koa/cors';
 import Router from '@koa/router';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { koaBody } from 'koa-body';
+import { OSS_REGION, OSS_BUCKET } from './constant';
+
+const fs = require('fs');
+const path = require('path');
+const OSS = require('ali-oss');
 
 const app = new Koa();
 const router = new Router();
@@ -19,6 +24,94 @@ app.use(
     credentials: true,
   })
 );
+
+const client = new OSS({
+  region: OSS_REGION,
+  accessKeyId: process.env.OSS_ACCESS_KEY_ID,
+  accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
+  bucket: OSS_BUCKET,
+});
+
+async function uploadToAliyun(
+  filePath: string,
+  filename: string
+): Promise<string> {
+  try {
+    const result = await client.put(filename, filePath, {
+      headers: {
+        'x-oss-object-acl': 'public-read',
+      },
+    });
+    // clear file in uploadDir
+    fs.unlinkSync(filePath);
+    return result.url;
+  } catch (error) {
+    console.error('Error uploading to Aliyun:', error);
+    throw error;
+  }
+}
+
+router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
+  try {
+    const request = ctx.request as any;
+    const file = request.files?.file;
+
+    if (!file) {
+      ctx.status = 400;
+      ctx.body = { error: 'No file uploaded' };
+      return;
+    }
+
+    const uploadedFile = Array.isArray(file) ? file[0] : file;
+    const uploadDir = path.join(__dirname, 'uploads');
+    // if the directory doesn't exist, create it
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const filePath = path.join(uploadDir, uploadedFile.newFilename);
+    const reader = fs.createReadStream(uploadedFile.filepath);
+    const stream = fs.createWriteStream(filePath);
+
+    await new Promise((resolve, reject) => {
+      reader.pipe(stream);
+      stream.on('finish', resolve);
+      stream.on('error', reject);
+    });
+
+    const fileExt = path.extname(uploadedFile.originalFilename);
+    const filename = `${uploadedFile.newFilename}${fileExt}`;
+    const url = await uploadToAliyun(filePath, filename);
+
+    await prisma.file.create({
+      data: {
+        url,
+        filename,
+      },
+    });
+
+    ctx.body = [
+      {
+        file: {
+          url,
+          size: uploadedFile.size,
+          hash: uploadedFile.hash,
+          mimetype: uploadedFile.mimetype,
+          name: uploadedFile.originalFilename,
+          lastModified: uploadedFile.lastModified,
+        },
+        response: {
+          file_name: filename,
+          is_finished: true,
+        },
+      },
+    ];
+  } catch (error) {
+    console.error('Error processing file upload:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Failed to upload file' };
+  }
+});
 
 router.post('/activity/create', async (ctx) => {
   const { user_name, user_cname, activity } = ctx.request.body;
