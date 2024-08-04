@@ -212,6 +212,11 @@ router.get('/activity/all', async (ctx) => {
   ctx.body = activityList;
 });
 
+router.get('/activity/preview', async (ctx) => {
+  const activityList = await prisma.activity.findMany();
+  ctx.body = activityList;
+});
+
 router.get('/user/all', async (ctx) => {
   const activityList = await prisma.creator.findMany();
   ctx.body = activityList;
