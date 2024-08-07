@@ -306,9 +306,12 @@ datasource db {
 
 </details>
 
-## Next steps
-
-- Check out the [Prisma docs](https://www.prisma.io/docs)
-- Share your feedback on the [Prisma Discord](https://pris.ly/discord/)
-- Create issues and ask questions on [GitHub](https://github.com/prisma/prisma/)
+## commit 
+- feat: Add new feature
+- fix: Fix a bug
+- chore: Make changes that don't affect functionality
+- docs: Modify documentation
+- perf: Improve performance
+- refactor: Refactor code
+- test: Add or modify test code
 
