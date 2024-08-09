@@ -210,9 +210,17 @@ router.get('/activity/all', async (ctx) => {
 	ctx.body = activityList;
 });
 
-router.get('/activity/preview', async (ctx) => {
-	const activityList = await prisma.activity.findMany();
-	ctx.body = activityList;
+router.get('/activity/preview/:id', async (ctx) => {
+	const { id } = ctx.params;
+	const previewUrl = await prisma.preview.findUnique({
+		where: {
+			id: id
+		}
+	});
+
+	ctx.body = {
+		url: previewUrl?.url
+	};
 });
 
 router.get('/user/all', async (ctx) => {

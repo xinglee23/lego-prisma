@@ -89,3 +89,8 @@ model File {
   filename String
   url      String
 }
+
+model Preview {
+  id  String @id @default(auto()) @map("_id") @db.ObjectId
+  url String
+}
