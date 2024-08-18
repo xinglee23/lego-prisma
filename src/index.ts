@@ -22,6 +22,9 @@ app.use(
 	})
 );
 
+// todo
+// login logout
+
 router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 	try {
 		const request = ctx.request as any;
@@ -132,7 +135,105 @@ router.post('/activity/create', async (ctx) => {
 	}
 });
 
+router.post('/template/create', async (ctx) => {
+	const { user_name, user_cname, activity } = ctx.request.body;
+
+	try {
+		const newActivity = await prisma.creator.create({
+			data: {
+				user_name,
+				user_cname,
+				activity: {
+					create: {
+						update_time: new Date(),
+						name: activity.name,
+						activity_show_name: activity.activity_show_name,
+						type: activity.type, // 根据 ActivityTypeEnum 的枚举值
+						source: activity.source,
+						work_status: activity.work_status,
+						url: activity.url,
+						second_work_status: activity.second_work_status,
+						template_config: activity.template_config, // 根据需要设置 JSON 数据
+						setting_config: {
+							create: {
+								...activity.setting_config,
+								take_part_in_config: {
+									create: {
+										...activity.setting_config.take_part_in_config
+									}
+								},
+								rewards_list: {
+									create: {
+										...activity.setting_config.rewards_list
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		});
+
+		ctx.status = 201;
+		ctx.body = newActivity;
+	} catch (error) {
+		console.error('Error creating activity:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Internal Server Error' };
+	}
+});
+
 router.post('/activity/edit/:id', async (ctx) => {
+	const { id: activity_id } = ctx.params;
+	const { activity } = ctx.request.body;
+
+	if (!activity_id) {
+		throw Error('activity_id can`t be empty');
+	}
+
+	try {
+		const updatedActivity = await prisma.activity.update({
+			where: {
+				activity_id
+			},
+			data: {
+				update_time: new Date(),
+				name: activity.name,
+				activity_show_name: activity.activity_show_name,
+				type: activity.type, // 根据 ActivityTypeEnum 的枚举值
+				source: activity.source,
+				work_status: activity.work_status,
+				url: activity.url,
+				second_work_status: activity.second_work_status,
+				template_config: activity.template_config, // 根据需要设置 JSON 数据
+				setting_config: {
+					update: {
+						...activity.setting_config,
+						take_part_in_config: {
+							update: {
+								...(activity.setting_config?.take_part_in_config || {})
+							}
+						},
+						rewards_list: {
+							update: {
+								...(activity.setting_config?.rewards_list || {})
+							}
+						}
+					}
+				}
+			}
+		});
+
+		ctx.status = 201;
+		ctx.body = updatedActivity;
+	} catch (error) {
+		console.error('Error updating activity:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Internal Server Error' };
+	}
+});
+
+router.post('/template/edit/:id', async (ctx) => {
 	const { id: activity_id } = ctx.params;
 	const { activity } = ctx.request.body;
 
