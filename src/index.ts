@@ -22,9 +22,6 @@ app.use(
 	})
 );
 
-// todo
-// login logout
-
 router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 	try {
 		const request = ctx.request as any;
