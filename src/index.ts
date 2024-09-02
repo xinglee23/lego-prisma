@@ -290,7 +290,18 @@ router.get('/activity/edit/:id', async (ctx) => {
 		});
 
 		const settingConfig = await prisma.settingConfig.findUnique({
-			where: { id: setting_config_id }
+			where: { id: setting_config_id },
+			select: {
+				id: false,
+				version: true,
+				activity_param_config: true,
+				activity_start_time: true,
+				activity_end_time: true,
+				take_part_in_config_id: true,
+				reward_id: true,
+				rewards_list: true,
+				activity: false
+			}
 		});
 
 		ctx.body = {
