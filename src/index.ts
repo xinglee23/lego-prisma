@@ -183,7 +183,8 @@ router.post('/activity/edit/:id', async (ctx) => {
 });
 
 router.post('/activity/save', async (ctx) => {
-	const { activity_id, activity } = ctx.request.body;
+	const { activity_id, ...rest } = ctx.request.body;
+	const activity = rest;
 
 	try {
 		const updatedActivity = await prisma.activity.update({
