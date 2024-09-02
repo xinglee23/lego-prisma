@@ -200,20 +200,45 @@ router.post('/activity/save', async (ctx) => {
 				work_status: activity.work_status,
 				url: activity.url,
 				second_work_status: activity.second_work_status,
-				template_config: activity.template_config, // 根据需要设置 JSON 数据
+				template_config: JSON.stringify(activity.template_config), // 根据需要设置 JSON 数据
 				setting_config: {
 					update: {
-						...activity.setting_config,
+						version: activity.setting_config.version,
+						activity_param_config:
+							activity.setting_config.activity_param_config,
+						activity_start_time: activity.setting_config.activity_start_time,
+						activity_end_time: activity.setting_config.activity_end_time,
 						take_part_in_config: {
 							update: {
-								...(activity.setting_config?.take_part_in_config || {})
-							}
-						},
-						rewards_list: {
-							update: {
-								...(activity.setting_config?.rewards_list || {})
+								where: {
+									id: activity.setting_config.take_part_in_config.id
+								},
+								data: {
+									user_group:
+										activity.setting_config.take_part_in_config.user_group,
+									user_group_cname:
+										activity.setting_config.take_part_in_config.user_group_cname
+								}
 							}
 						}
+						// rewards_list: {
+						// 	update: {
+						// 		where: {
+						// 			reward_info_id: activity.setting_config.reward_id
+						// 		},
+						// 		data: {
+						// 			reward_json: activity.setting_config.rewards_list.reward_json
+						// 		}
+						// 	}
+						// }
+					}
+				}
+			},
+			include: {
+				setting_config: {
+					include: {
+						take_part_in_config: true
+						// rewards_list: true
 					}
 				}
 			}
