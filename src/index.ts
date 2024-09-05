@@ -306,6 +306,14 @@ router.get('/activity/edit/:id', async (ctx) => {
 		const activity = await prisma.activity.findUnique({
 			where: {
 				activity_id: id
+			},
+			include: {
+				setting_config: {
+					include: {
+						take_part_in_config: true,
+						rewards_list: true
+					}
+				}
 			}
 		});
 
