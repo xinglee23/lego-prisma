@@ -8,6 +8,7 @@
 		"dev": "nodemon src/index.ts",
 		"generate": "prisma generate",
 		"studio": "prisma studio",
+		"seed": "ts-node prisma/seed.ts",
 		"lint": "eslint \"{src,libs,test}/**/*.ts\" --fix",
 		"format": "prettier --write \"src/**/*.ts\""
 	},

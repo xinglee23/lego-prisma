@@ -1,10 +1,10 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
 }
 
 enum ActivityTypeEnum {
@@ -13,84 +13,102 @@ enum ActivityTypeEnum {
   ACTIVITY_FORM
 }
 
-enum ShareSettingTypeEnum {
-  ACTIVITY
-  TEMPLATE
-}
-
-enum PosterSettingTypeEnum {
-  ACTIVITY
-  TEMPLATE
-}
-
-model TakePartInConfig {
-  id               String          @id @default(auto()) @map("_id") @db.ObjectId
-  user_group       String? // 用户分组
-  user_group_cname String? // 用户分组中文名
-  SettingConfig    SettingConfig[]
-}
-
-model RewardsList {
-  reward_info_id String          @id @default(auto()) @map("_id") @db.ObjectId
-  reward_json    Json?
-  SettingConfig  SettingConfig[]
-}
-
-model SettingConfig {
-  id                     String           @id @default(auto()) @map("_id") @db.ObjectId
-  version                String? // 模板版本
-  activity_param_config  Json? // 前端给后端的结构化数据
-  // activity_show_name     String? // 活动对外展示名称
-  activity_start_time    String // 活动开始时间
-  activity_end_time      String // 活动结束时间
-  take_part_in_config_id String           @db.ObjectId
-  take_part_in_config    TakePartInConfig @relation(fields: [take_part_in_config_id], references: [id])
-  reward_id              String           @db.ObjectId
-  rewards_list           RewardsList      @relation(fields: [reward_id], references: [reward_info_id])
-  activity               Activity[]
-}
-
 model Activity {
-  activity_id        String           @id @default(auto()) @map("_id") @db.ObjectId
-  name               String // 作品标题，默认是【场景名称】
-  activity_show_name String // 作品对外展示名称
-  type               ActivityTypeEnum
-  source             String
-  work_status        String // 作品状态：[ACTIVITY_DRAFT 草稿  ACTIVITY_UN_START 未开始 ACTIVITY_IN_PROGRESS 进行中 ACTIVITY_STOP 暂停中 ACTIVITY_END 已结束 ACTIVITY_KILL 已终止 ACTIVITY_PUBLISH_FAIL 发布失败]
-  url                String // 作品发布的URL
-  second_work_status String // 作品二级状态：[APPROVAL_REJECTED 审批驳回 APPROVAL_IN_PROGRESS 审批中 APPROVAL_AGREE 审批通过 KILL_MANUAL 手动终止 REWARDS_NOT_ENOUGH 奖励不足]
-  creator_id         String           @db.ObjectId
-  creator            Creator          @relation(fields: [creator_id], references: [user_id])
-  create_time        DateTime         @default(now())
-  update_time        DateTime
-  // tags_id            String           @db.ObjectId
-  // tags               Tags             @relation(fields: [tags_id], references: [id])
-  template_config    Json
-  setting_config_id  String           @unique @db.ObjectId
-  setting_config     SettingConfig    @relation(fields: [setting_config_id], references: [id])
-  validated          Boolean?
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  activity_id       String   @unique
+  name              String
+  activity_show_name String?
+  type              ActivityTypeEnum
+  source            String
+  work_status       String
+  url               String?
+  second_work_status String?
+  creator_id        String
+  create_time       DateTime
+  update_time       DateTime
+  template_config   Json?
+  setting_config    Json?
+  validated         Boolean?
+  preview_url       String?
+  plugin_type       String?
+  poster_url        String?
+  tags              ActivityTag[]
+  folder_id         String?  @db.ObjectId
+  folder            Folder?  @relation(fields: [folder_id], references: [id])
 }
 
-// model Tags {
-//   id       String     @id @default(auto()) @map("_id") @db.ObjectId
-//   name     String?
-//   activity Activity[]
-// }
+model Tag {
+  id         String       @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  activities ActivityTag[]
+}
 
-model Creator {
-  user_id    String     @id @default(auto()) @map("_id") @db.ObjectId
+model ActivityTag {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  activity_id String   @db.ObjectId
+  tag_id      String   @db.ObjectId
+  activity    Activity @relation(fields: [activity_id], references: [id])
+  tag         Tag      @relation(fields: [tag_id], references: [id])
+
+  @@unique([activity_id, tag_id])
+}
+
+model Folder {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  folder_id   String     @unique
+  folder_name String
+  activities  Activity[]
+}
+
+model User {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
   user_name  String
   user_cname String
-  activity   Activity[]
+  user_id    Int    @unique
+}
+
+model Template {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  template_id     String   @unique
+  category_code   String?
+  type            String
+  scene_code      String?
+  name            String
+  description     String?
+  use_count       Int      @default(0)
+  preview_url     String?
+  thumb_url       String?
+  thumb_height    Int?
+  thumb_width     Int?
+  template_config Json?
+  plugin_config   Json?
+  scene_config    Json?
+  setting_config  Json?
+  source          String?
+  work_status     String
+  creator_id      String
+  publish_time    DateTime?
+  create_time     DateTime
+  update_time     DateTime
+}
+
+model QuestionSuit {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  question_suit_name String
+  question_count    Int
+  questions         Question[]
+}
+
+model Question {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  question_name   String
+  question_type   String
+  question_suit   QuestionSuit @relation(fields: [question_suit_id], references: [id])
+  question_suit_id String       @db.ObjectId
 }
 
 model File {
   id       String @id @default(auto()) @map("_id") @db.ObjectId
   filename String
   url      String
-}
-
-model Preview {
-  id  String @id @default(auto()) @map("_id") @db.ObjectId
-  url String
 }
