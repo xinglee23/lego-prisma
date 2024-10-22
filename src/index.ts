@@ -84,6 +84,44 @@ router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 	}
 });
 
+router.get('/activity/edit/:id', async (ctx) => {
+    const { id } = ctx.params;
+    try {
+        const activity = await prisma.activity.findUnique({
+            where: {
+                activity_id: id
+            },
+            include: {
+                tags: {
+                    include: {
+                        tag: true
+                    }
+                },
+                folder: true
+            }
+        });
+
+        if (!activity) {
+            ctx.status = 404;
+            ctx.body = { error: 'Activity not found' };
+            return;
+        }
+
+        // 构造响应体
+        ctx.body = {
+            ...activity,
+            creator: {
+                user_id: activity.creator_id,
+            },
+            
+        };
+    } catch (error) {
+        console.error('Error getting activity:', error);
+        ctx.status = 500;
+        ctx.body = { error: 'Internal Server Error' };
+    }
+});
+
 router.post('/activity/edit/:id', async (ctx) => {
 	const { id: activity_id } = ctx.params;
 	const { activity } = ctx.request.body;
