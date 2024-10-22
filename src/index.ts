@@ -54,12 +54,14 @@ router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 		const filename = `${uploadedFile.newFilename}${fileExt}`;
 		const url = await uploadToAliyun(filePath, filename);
 
-		await prisma.file.create({
+		const { id }  = await prisma.file.create({
 			data: {
 				url,
 				filename
 			}
 		});
+
+		console.log('prisma file', id);
 
 		ctx.body = [
 			{
@@ -67,6 +69,7 @@ router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 					url,
 					size: uploadedFile.size,
 					hash: uploadedFile.hash,
+					material_id: id,
 					mimetype: uploadedFile.mimetype,
 					name: uploadedFile.originalFilename,
 					lastModified: uploadedFile.lastModified
