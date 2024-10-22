@@ -54,7 +54,7 @@ router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 		const filename = `${uploadedFile.newFilename}${fileExt}`;
 		const url = await uploadToAliyun(filePath, filename);
 
-		const { id }  = await prisma.file.create({
+		const { id } = await prisma.file.create({
 			data: {
 				url,
 				filename
@@ -63,23 +63,21 @@ router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 
 		console.log('prisma file', id);
 
-		ctx.body = [
-			{
-				file: {
-					url,
-					size: uploadedFile.size,
-					hash: uploadedFile.hash,
-					material_id: id,
-					mimetype: uploadedFile.mimetype,
-					name: uploadedFile.originalFilename,
-					lastModified: uploadedFile.lastModified
-				},
-				response: {
-					file_name: filename,
-					is_finished: true
-				}
+		ctx.body = {
+			file: {
+				url,
+				size: uploadedFile.size,
+				hash: uploadedFile.hash,
+				material_id: id,
+				mimetype: uploadedFile.mimetype,
+				name: uploadedFile.originalFilename,
+				lastModified: uploadedFile.lastModified
+			},
+			response: {
+				file_name: filename,
+				is_finished: true
 			}
-		];
+		};
 	} catch (error) {
 		console.error('Error processing file upload:', error);
 		ctx.status = 500;
@@ -88,41 +86,40 @@ router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 });
 
 router.get('/activity/edit/:id', async (ctx) => {
-    const { id } = ctx.params;
-    try {
-        const activity = await prisma.activity.findUnique({
-            where: {
-                activity_id: id
-            },
-            include: {
-                tags: {
-                    include: {
-                        tag: true
-                    }
-                },
-                folder: true
-            }
-        });
+	const { id } = ctx.params;
+	try {
+		const activity = await prisma.activity.findUnique({
+			where: {
+				activity_id: id
+			},
+			include: {
+				tags: {
+					include: {
+						tag: true
+					}
+				},
+				folder: true
+			}
+		});
 
-        if (!activity) {
-            ctx.status = 404;
-            ctx.body = { error: 'Activity not found' };
-            return;
-        }
+		if (!activity) {
+			ctx.status = 404;
+			ctx.body = { error: 'Activity not found' };
+			return;
+		}
 
-        // 构造响应体
-        ctx.body = {
-            ...activity,
-            creator: {
-                user_id: activity.creator_id,
-            },
-            
-        };
-    } catch (error) {
-        console.error('Error getting activity:', error);
-        ctx.status = 500;
-        ctx.body = { error: 'Internal Server Error' };
-    }
+		// 构造响应体
+		ctx.body = {
+			...activity,
+			creator: {
+				user_id: activity.creator_id
+			}
+		};
+	} catch (error) {
+		console.error('Error getting activity:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Internal Server Error' };
+	}
 });
 
 router.post('/activity/edit/:id', async (ctx) => {
