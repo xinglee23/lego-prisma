@@ -28,6 +28,7 @@ async function main() {
   // Create an activity
   const activity = await prisma.activity.create({
     data: {
+      activity_id: generateId(),
       name: 'Sample Activity',
       activity_show_name: 'Sample Activity Display Name',
       type: 'ACTIVITY_H5',
