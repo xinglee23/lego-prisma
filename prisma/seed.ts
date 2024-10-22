@@ -1,61 +1,58 @@
-import { PrismaClient, ActivityTypeEnum } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { generateId } from '../src/utils/generateId';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // 创建 Creator
-  const creator = await prisma.creator.create({
+  // Create a folder
+  const folder = await prisma.folder.create({
     data: {
-      user_name: 'Test User',
-      user_cname: '测试用户',
+      folder_id: generateId(),
+      folder_name: 'Sample Folder',
     },
   });
 
-  // 创建 TakePartInConfig
-  const takePartInConfig = await prisma.takePartInConfig.create({
+  // Create some tags
+  const tag1 = await prisma.tag.create({
     data: {
-      user_group: 'Test Group',
-      user_group_cname: '测试组',
+      name: 'Tag 1',
     },
   });
 
-  // 创建 RewardsList
-  const rewardsList = await prisma.rewardsList.create({
+  const tag2 = await prisma.tag.create({
     data: {
-      reward_json: {},
+      name: 'Tag 2',
     },
   });
 
-  // 创建 SettingConfig
-  const settingConfig = await prisma.settingConfig.create({
+  // Create an activity
+  const activity = await prisma.activity.create({
     data: {
-      version: '1.0',
-      activity_param_config: {},
-      activity_start_time: '2022-01-01',
-      activity_end_time: '2022-12-31',
-      take_part_in_config_id: takePartInConfig.id,
-      reward_id: rewardsList.reward_info_id,
-    },
-  });
-
-  // 创建 Activity
-  await prisma.activity.create({
-    data: {
-      name: 'Test Activity',
-      activity_show_name: '测试活动',
-      type: ActivityTypeEnum.ACTIVITY_COMBO,
-      source: 'Test Source',
+      name: 'Sample Activity',
+      activity_show_name: 'Sample Activity Display Name',
+      type: 'ACTIVITY_H5',
+      source: 'SYSTEM_CREATE',
       work_status: 'ACTIVITY_DRAFT',
-      url: 'https://example.com',
-      second_work_status: 'APPROVAL_REJECTED',
-      creator_id: creator.user_id,
+      url: 'https://example.com/activity',
+      creator_id: 'system',
       create_time: new Date(),
       update_time: new Date(),
       template_config: {},
-      setting_config_id: settingConfig.id,
-      validated: true,
+      setting_config: {},
+      validated: false,
+      folder: {
+        connect: { id: folder.id },
+      },
+      tags: {
+        create: [
+          { tag: { connect: { id: tag1.id } } },
+          { tag: { connect: { id: tag2.id } } },
+        ],
+      },
     },
   });
+
+  console.log({ activity, folder, tag1, tag2 });
 }
 
 main()
