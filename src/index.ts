@@ -346,6 +346,48 @@ router.post('/question/suit/list', async (ctx) => {
 	};
 });
 
+router.delete('/activity/:activity_id', async (ctx) => {
+	const { activity_id } = ctx.params;
+
+	try {
+		const deletedActivity = await prisma.activity.delete({
+			where: {
+				activity_id: activity_id // 根据 activity_id 删除活动
+			}
+		});
+
+		ctx.status = 200; // 设置响应状态为 200
+		ctx.body = {
+			message: 'Activity deleted successfully',
+			activity: deletedActivity
+		};
+	} catch (error) {
+		ctx.status = 404; // 如果未找到活动，设置状态为 404
+		ctx.body = {
+			message: 'Activity not found',
+			error: (error as Error).message
+		};
+	}
+});
+
+router.post('/activity/search', async (ctx) => {
+	const { activity_id, name, type } = ctx.request.body;
+	const where: any = {};
+
+	if (activity_id) where.activity_id = activity_id;
+	if (name) where.name = { contains: name };
+
+	try {
+		const activities = await prisma.activity.findMany({ where });
+
+		ctx.body = activities;
+	} catch (error) {
+		console.error('Error searching activities:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Internal Server Error' };
+	}
+});
+
 app.use(router.routes()).use(router.allowedMethods());
 
 const PORT = process.env.PORT || 3000;
