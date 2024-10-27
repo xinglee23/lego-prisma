@@ -1,10 +1,10 @@
 import { generateId } from './generateId';
-import { uploadToAliyun } from './upload';
+import { uploadToAliyun, cutImageWithAliyun } from './upload';
 
 export default {
-    generateId, uploadToAliyun
-}
+	generateId,
+	uploadToAliyun,
+	cutImageWithAliyun
+};
 
-export {
-    generateId, uploadToAliyun
-}
+export { generateId, uploadToAliyun, cutImageWithAliyun };

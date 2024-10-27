@@ -3,7 +3,7 @@ import Cors from '@koa/cors';
 import Router from '@koa/router';
 import { PrismaClient } from '@prisma/client';
 import { koaBody } from 'koa-body';
-import { uploadToAliyun, generateId } from './utils';
+import { uploadToAliyun, generateId, cutImageWithAliyun } from './utils';
 
 const fs = require('fs');
 const path = require('path');
@@ -21,6 +21,35 @@ app.use(
 		credentials: true
 	})
 );
+
+router.get('/image/cut', async (ctx) => {
+	const { materialId, cutConfig } = ctx.query;
+
+	if (!materialId || !cutConfig) {
+		ctx.status = 400;
+		ctx.body = { error: 'Missing materialId or cutConfig' };
+		return;
+	}
+
+	try {
+		const material = await prisma.file.findUnique({
+			where: { id: materialId as string }
+		});
+
+		if (!material) {
+			ctx.status = 404;
+			ctx.body = { error: 'Material not found' };
+			return;
+		}
+		const data = await cutImageWithAliyun(material, cutConfig as string);
+
+		ctx.body = { url: data.url };
+	} catch (error) {
+		console.error('Error processing image:', error);
+		ctx.status = 500;
+		ctx.body = { error: 'Internal server error' };
+	}
+});
 
 router.post('/file/upload', koaBody({ multipart: true }), async (ctx) => {
 	try {
